@@ -1,27 +1,19 @@
-## distributed-lock
+package org.gy.lock.core;
 
-### 配置说明
-依赖StringRedisTemplate 如果springboot中没有配置StringRedisTemplate，则不可使用
 
-### 使用说明
-1. 当前分布式采用redis+lua实现，后续可以扩展其他实现方式
-2. 调用入口：DistributedLockAction
-```
-//定义分布式实现
-RedisDistributedLock lock = new RedisDistributedLock(redisTemplate, lockKey, expireTime);
-//方法执行
-LockResult<Long> execute = DistributedLockAction.execute(lock, () -> {
-    return System.currentTimeMillis();
-});
-Assert.assertTrue(execute.success());
-```
-### 获取锁方式
-> 方法入口类：DistributedLockAction
-- 仅尝试一次获取锁，没有获取到，则直接返回获取失败
+import org.gy.lock.model.LockResult;
 
-``` 
 /**
-     * 功能描述：业务执行，包含加锁、释放锁(仅尝试一次获取锁)
+ * 功能描述：
+ *
+ * @author gy
+ * @version 1.0.0
+ */
+public class DistributedLockAction {
+
+
+    /**
+     * 功能描述：业务执行，包含加锁、释放锁(非阻塞锁，仅尝试一次获取锁)
      *
      * @param lock 分布式锁定义
      * @param runnable 执行体
@@ -29,12 +21,9 @@ Assert.assertTrue(execute.success());
     public static <T> LockResult<T> execute(DistributedLock lock, DistributedLockCallback<T> runnable) {
         return execute(lock, 0, 0, runnable);
     }
-``` 
-- 一直尝试，直到获取成功
 
-``` 
-/**
-     * 功能描述:业务执行，包含加锁、释放锁(一直尝试，直到获取成功)
+    /**
+     * 功能描述:业务执行，包含加锁、释放锁(阻塞锁，一直阻塞)
      *
      * @param lock 分布式锁定义
      * @param sleepTimeMillis 睡眠重试时间，单位：毫秒
@@ -43,13 +32,10 @@ Assert.assertTrue(execute.success());
     public static <T> LockResult<T> execute(DistributedLock lock, long sleepTimeMillis,
         DistributedLockCallback<T> runnable) {
         return execute(lock, -1, sleepTimeMillis, runnable);
-    } 
-``` 
-- 多次尝试获取锁，自定义超时时间
+    }
 
-``` 
-/**
-     * 功能描述:业务执行，包含加锁、释放锁(多次尝试获取锁，自定义超时时间)
+    /**
+     * 功能描述:业务执行，包含加锁、释放锁(阻塞锁，自定义阻塞时间)
      *
      * @param lock 分布式锁定义
      * @param waitTimeMillis 等待超时时间，单位：毫秒
@@ -71,8 +57,6 @@ Assert.assertTrue(execute.success());
                 lock.unlock();
             }
         }
-    } 
-``` 
+    }
 
-
-
+}
